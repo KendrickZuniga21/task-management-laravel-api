@@ -54,9 +54,27 @@ class AuthController extends Controller
 
     public function me()
     {
-        return response()->json(
-            Auth::guard('api')->user()
-        );
+        $user = Auth::guard('api')->user();
+
+        $teamIds = [];
+
+        if ($user->role === 'manager') {
+
+            $teamIds = \App\Models\TeamMember::where(
+                'user_id',
+                $user->id
+            )
+            ->where('role', 'lead')
+            ->pluck('team_id');
+        }
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'team_ids' => $teamIds
+        ]);
     }
 
     public function logout()

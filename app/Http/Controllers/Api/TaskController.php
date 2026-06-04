@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Validation\ValidationException;
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Team;
@@ -14,9 +15,7 @@ class TaskController extends Controller
     public function index(Request $request, $team_id)
     {
         try {
-
             $team = Team::find($team_id);
-
             if (!$team) {
                 return response()->json([
                     'message' => 'Team not found'
@@ -31,12 +30,10 @@ class TaskController extends Controller
                 'team'
             ])->where('team_id', $team_id);
 
-            // Team members only see their own tasks
             if ($user->role === 'member') {
                 $query->where('assigned_to', $user->id);
             }
 
-            // Filters
             if ($request->status) {
                 $query->where('status', $request->status);
             }
@@ -49,12 +46,13 @@ class TaskController extends Controller
                 $query->where('assigned_to', $request->assigned_to);
             }
 
-            $tasks = $query->paginate(10);
+            $tasks = $request->boolean('all')
+                ? $query->get()
+                : $query->paginate(10);
 
             return response()->json($tasks);
 
         } catch (\Exception $e) {
-
             return response()->json([
                 'message' => 'Failed to retrieve tasks',
                 'error' => $e->getMessage(),
@@ -124,6 +122,13 @@ class TaskController extends Controller
                 'status' => 'pending',
             ]);
 
+            $notificationService = new NotificationService();
+
+            $notificationService->send(
+                'New Task Created',
+                'Task "' . $task->title . '" was created successfully'
+            );
+            
             return response()->json([
                 'message' => 'Task created successfully',
                 'task' => $task,
@@ -256,6 +261,12 @@ class TaskController extends Controller
 
             $task->update($validated);
 
+            $notificationService = new NotificationService();
+            $notificationService->send(
+                'Task Updated',
+                'Task "' . $task->title . '" was updated successfully'
+            );
+
             return response()->json([
                 'message' => 'Task updated successfully',
                 'task' => $task
@@ -298,6 +309,13 @@ class TaskController extends Controller
             }
 
             $task->delete();
+
+            $notificationService = new NotificationService();
+
+            $notificationService->send(
+                'Task Deleted',
+                'Task "' . $task->title . '" was deleted successfully'
+            );
 
             return response()->json([
                 'message' => 'Task deleted successfully'
@@ -381,6 +399,14 @@ class TaskController extends Controller
                 'status' => $newStatus
             ]);
 
+            $notificationService = new NotificationService();
+
+            $notificationService->send(
+                'Task Status Updated',
+                'Task "' . $task->title .
+                '" moved to ' . $task->status
+            );
+
             return response()->json([
                 'message' => 'Task status updated successfully',
                 'task' => $task
@@ -395,6 +421,100 @@ class TaskController extends Controller
             return response()->json([
                 'message' => 'Something went wrong',
                 'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function archive($id)
+    {
+        try {
+
+            $task = Task::find($id);
+
+            if (!$task) {
+                return response()->json([
+                    'message' => 'Task not found'
+                ], 404);
+            }
+
+            if ($task->status !== 'cancelled') {
+                return response()->json([
+                    'message' => 'Only cancelled tasks can be archived'
+                ], 422);
+            }
+
+            if ($task->updated_at > now()->subDays(30)) {
+                return response()->json([
+                    'message' => 'Task must be cancelled for at least 30 days before archiving'
+                ], 422);
+            }
+
+            $task->delete();
+
+            return response()->json([
+                'message' => 'Task archived successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => 'Failed to archive task',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function all(Request $request)
+    {
+        try {
+
+            $user = auth()->user();
+
+            $query = Task::with([
+                'assignedUser',
+                'creator',
+                'team'
+            ]);
+
+            if ($user->role === 'member') {
+                $query->where(
+                    'assigned_to',
+                    $user->id
+                );
+            }
+
+            if ($request->status) {
+                $query->where(
+                    'status',
+                    $request->status
+                );
+            }
+
+            if ($request->priority) {
+                $query->where(
+                    'priority',
+                    $request->priority
+                );
+            }
+
+            if ($request->assigned_to) {
+                $query->where(
+                    'assigned_to',
+                    $request->assigned_to
+                );
+            }
+
+            $tasks = $request->boolean('all')
+                ? $query->get()
+                : $query->paginate(10);
+
+            return response()->json($tasks);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => 'Failed to retrieve tasks',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

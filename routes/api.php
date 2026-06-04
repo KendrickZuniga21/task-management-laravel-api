@@ -59,12 +59,15 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::prefix('tasks')->group(function () {
+        
+        Route::get('/', [TaskController::class, 'all']);
 
         Route::get('/{id}', [TaskController::class, 'show']);
         Route::patch('/{id}', [TaskController::class, 'update']);
         Route::delete('/{id}', [TaskController::class, 'destroy']);
         Route::patch('/{id}/status', [TaskController::class, 'updateStatus']);
-
+        
+        Route::delete('/{id}/archive', [TaskController::class, 'archive']);
     });
 
 });
