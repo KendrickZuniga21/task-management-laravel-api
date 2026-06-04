@@ -203,4 +203,64 @@ class TeamController extends Controller
             ], 500);
         }
     }
+
+    public function options()
+    {
+        try {
+
+            $user = auth()->user();
+
+            if ($user->role === 'admin') {
+
+                $teams = Team::select(
+                    'id',
+                    'name'
+                )->get();
+
+                return response()->json(
+                    $teams
+                );
+            }
+
+            if ($user->role === 'manager') {
+
+                $teamIds = TeamMember::where(
+                    'user_id',
+                    $user->id
+                )
+                ->where(
+                    'role',
+                    'lead'
+                )
+                ->pluck(
+                    'team_id'
+                );
+
+                $teams = Team::whereIn(
+                    'id',
+                    $teamIds
+                )
+                ->select(
+                    'id',
+                    'name'
+                )
+                ->get();
+
+                return response()->json(
+                    $teams
+                );
+            }
+
+            return response()->json([]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' =>
+                    'Failed to retrieve teams',
+                'error' =>
+                    $e->getMessage(),
+            ], 500);
+        }
+    }
 }

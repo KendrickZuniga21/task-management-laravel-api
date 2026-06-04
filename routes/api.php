@@ -31,6 +31,8 @@ Route::middleware('auth:api')->group(function () {
         Route::patch('{id}/status', [UserController::class, 'toggleStatus'])
             ->middleware('role:admin');
 
+        Route::get('/assignees',[UserController::class, 'assignees']);
+
     });
 
     Route::prefix('teams')->group(function () {
@@ -49,6 +51,8 @@ Route::middleware('auth:api')->group(function () {
 
         Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])
             ->middleware('role:admin,manager');
+        
+        Route::get('/options', [TeamController::class, 'options']);
     });
 
     Route::prefix('teams/{team_id}/tasks')->group(function () {

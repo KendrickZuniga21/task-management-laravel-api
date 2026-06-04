@@ -192,4 +192,94 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function assignees()
+    {
+        try {
+
+            $user = auth()->user();
+
+            if ($user->role === 'admin') {
+
+                $users = User::where(
+                    'is_active',
+                    true
+                )
+                ->select(
+                    'id',
+                    'name',
+                    'email',
+                    'role'
+                )
+                ->get();
+
+                return response()->json(
+                    $users
+                );
+            }
+
+            if ($user->role === 'manager') {
+
+                $users = User::query()
+                    ->join(
+                        'team_members',
+                        'users.id',
+                        '=',
+                        'team_members.user_id'
+                    )
+                    ->whereIn(
+                        'team_members.team_id',
+                        function ($query) use ($user) {
+
+                            $query->select(
+                                'team_id'
+                            )
+                            ->from(
+                                'team_members'
+                            )
+                            ->where(
+                                'user_id',
+                                $user->id
+                            )
+                            ->where(
+                                'role',
+                                'lead'
+                            );
+                        }
+                    )
+                    ->where(
+                        'users.role',
+                        'member'
+                    )
+                    ->where(
+                        'users.is_active',
+                        true
+                    )
+                    ->select(
+                        'users.id',
+                        'users.name',
+                        'users.email'
+                    )
+                    ->distinct()
+                    ->get();
+
+                return response()->json(
+                    $users
+                );
+            }
+
+            return response()->json(
+                []
+            );
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' =>
+                    'Failed to retrieve assignees',
+                'error' =>
+                    $e->getMessage()
+            ], 500);
+        }
+    }
 }
