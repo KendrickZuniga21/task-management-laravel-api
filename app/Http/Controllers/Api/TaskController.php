@@ -48,7 +48,7 @@ class TaskController extends Controller
 
             $tasks = $request->boolean('all')
                 ? $query->get()
-                : $query->paginate(10);
+                : $query->paginate(20);
 
             return response()->json($tasks);
 

@@ -25,8 +25,8 @@ class UserController extends Controller
             }
 
             $users = $query
-                ->orderBy('id', 'desc')
-                ->paginate(10);
+                ->orderBy('id', 'asc')
+                ->paginate(20);
 
             return response()->json($users);
 
@@ -211,7 +211,16 @@ class UserController extends Controller
                     'email',
                     'role'
                 )
-                ->get();
+                ->get()
+                ->map(function ($user) {
+                    $user->team_ids = \App\Models\TeamMember::where(
+                        'user_id',
+                        $user->id
+                    )
+                    ->pluck('team_id');
+
+                    return $user;
+                });
 
                 return response()->json(
                     $users

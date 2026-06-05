@@ -1,7 +1,8 @@
 import {
     BrowserRouter,
     Routes,
-    Route
+    Route,
+    Navigate
 } from 'react-router-dom';
 
 import Login from '../pages/Login';
@@ -15,7 +16,6 @@ import Export from '../pages/Export';
 import ProtectedRoute from './ProtectedRoute';
 
 export default function AppRoutes() {
-
     return (
 
         <BrowserRouter>
@@ -48,7 +48,12 @@ export default function AppRoutes() {
                 <Route
                     path="/teams"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute
+                              roles={[
+                                'admin',
+                                'manager'
+                            ]}
+                        >
                             <Teams />
                         </ProtectedRoute>
                     }
@@ -57,7 +62,12 @@ export default function AppRoutes() {
                 <Route
                     path="/users"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute
+                              roles={[
+                                'admin',
+                                'manager'
+                            ]}
+                        >
                             <Users />
                         </ProtectedRoute>
                     }
@@ -66,7 +76,12 @@ export default function AppRoutes() {
                 <Route
                     path="/analytics"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute
+                              roles={[
+                                'admin',
+                                'manager'
+                            ]}
+                        >
                             <Analytics />
                         </ProtectedRoute>
                     }
@@ -75,7 +90,12 @@ export default function AppRoutes() {
                 <Route
                     path="/export"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute
+                            roles={[
+                                'admin',
+                                'manager'
+                            ]}
+                        >
                             <Export />
                         </ProtectedRoute>
                     }

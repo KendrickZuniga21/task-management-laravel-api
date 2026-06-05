@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\TeamMember;
 
 class TeamController extends Controller
 {
@@ -260,6 +261,50 @@ class TeamController extends Controller
                     'Failed to retrieve teams',
                 'error' =>
                     $e->getMessage(),
+            ], 500);
+        }
+    }
+
+     public function availableUsers($id)
+    {
+        try {
+
+            $team = Team::find($id);
+
+            if (!$team) {
+                return response()->json([
+                    'message' => 'Team not found'
+                ], 404);
+            }
+
+            $memberIds = $team->members()
+                ->pluck('users.id');
+
+            $users = User::where(
+                'is_active',
+                true
+            )
+            ->whereNotIn(
+                'id',
+                $memberIds
+            )
+            ->select(
+                'id',
+                'name',
+                'email'
+            )
+            ->orderBy('name')
+            ->get();
+
+            return response()->json(
+                $users
+            );
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => 'Failed to retrieve users',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

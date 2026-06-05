@@ -17,10 +17,12 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('users')->group(function () {
 
         Route::get('', [UserController::class, 'index'])
-            ->middleware('role:admin');
+            ->middleware('role:admin,manager');
 
         Route::post('', [UserController::class, 'store'])
             ->middleware('role:admin,manager');
+        
+        Route::get('/assignees',[UserController::class, 'assignees']);
 
         Route::get('{id}', [UserController::class, 'show'])
             ->middleware('role:admin');
@@ -31,7 +33,6 @@ Route::middleware('auth:api')->group(function () {
         Route::patch('{id}/status', [UserController::class, 'toggleStatus'])
             ->middleware('role:admin');
 
-        Route::get('/assignees',[UserController::class, 'assignees']);
 
     });
 
@@ -42,17 +43,20 @@ Route::middleware('auth:api')->group(function () {
 
         Route::post('/', [TeamController::class, 'store'])
             ->middleware('role:admin,manager');
+            
+        Route::get('/options', [TeamController::class, 'options']);
 
         Route::get('/{id}', [TeamController::class, 'show'])
             ->middleware('role:admin,manager');
 
         Route::post('/{id}/members', [TeamController::class, 'addMember'])
             ->middleware('role:admin,manager');
+        
+        Route::get('/{id}/available-users',[TeamController::class, 'availableUsers']);
 
         Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])
             ->middleware('role:admin,manager');
         
-        Route::get('/options', [TeamController::class, 'options']);
     });
 
     Route::prefix('teams/{team_id}/tasks')->group(function () {

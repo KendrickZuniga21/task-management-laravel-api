@@ -7,7 +7,9 @@ import {
     ListItemButton,
     ListItemText,
     Button,
-    Box
+    Box,
+    Snackbar,
+    Alert
 } from '@mui/material';
 
 import {
@@ -17,6 +19,12 @@ import {
 import {
     useAuth
 } from '../context/AuthContext';
+
+import {
+    useState, useEffect
+} from 'react';
+
+import socket from '../socket';
 
 const drawerWidth = 240;
 
@@ -38,6 +46,43 @@ export default function DashboardLayout({
 
         navigate('/');
     };
+
+    const [notification, setNotification] =
+    useState({
+        open: false,
+        title: '',
+        message: ''
+    });
+
+ useEffect(() => {
+
+    socket.on(
+        'notification',
+        data => {
+
+            console.log(
+                'SOCKET RECEIVED:',
+                data
+            );
+
+            setNotification({
+                open: true,
+                title: data.title,
+                message: data.message
+            });
+
+        }
+    );
+
+    return () => {
+
+        socket.off(
+            'notification'
+        );
+
+    };
+
+}, []);
 
     return (
 
@@ -119,37 +164,41 @@ export default function DashboardLayout({
                             primary="Tasks"
                         />
                     </ListItemButton>
+                    {user?.role !== 'member' && (
+                        <ListItemButton
+                            onClick={() =>
+                                navigate('/teams')
+                            }
+                        >
+                            <ListItemText
+                                primary="Teams"
+                            />
+                        </ListItemButton>
+                    )}
+                   {user?.role !== 'member'  && (
+                        <ListItemButton
+                            onClick={() =>
+                                navigate('/users')
+                            }
+                        >
+                            <ListItemText
+                                primary="Users"
+                            />
+                        </ListItemButton>
+                    )}
 
-                    <ListItemButton
-                        onClick={() =>
-                            navigate('/teams')
-                        }
-                    >
-                        <ListItemText
-                            primary="Teams"
-                        />
-                    </ListItemButton>
-
-                    <ListItemButton
-                        onClick={() =>
-                            navigate('/users')
-                        }
-                    >
-                        <ListItemText
-                            primary="Users"
-                        />
-                    </ListItemButton>
-
-                    <ListItemButton
-                        onClick={() =>
-                            navigate('/analytics')
-                        }
-                    >
-                        <ListItemText
-                            primary="Analytics"
-                        />
-                    </ListItemButton>
-
+                    {user?.role !== 'member' && (
+                        <ListItemButton
+                            onClick={() =>
+                                navigate('/analytics')
+                            }
+                        >
+                            <ListItemText
+                                primary="Analytics"
+                            />
+                        </ListItemButton>
+                    )}
+                    {user?.role !== 'member' && (
                     <ListItemButton
                         onClick={() =>
                             navigate('/export')
@@ -159,11 +208,38 @@ export default function DashboardLayout({
                             primary="Export"
                         />
                     </ListItemButton>
+                    )}
 
                 </List>
 
             </Drawer>
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={5000}
+                onClose={() =>
+                    setNotification(prev => ({
+                        ...prev,
+                        open: false
+                    }))
+                }
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left'
+                }}
+            >
+                <Alert
+                    severity="info"
+                    variant="filled"
+                >
+                    <strong>
+                        {notification.title}
+                    </strong>
 
+                    <br />
+
+                    {notification.message}
+                </Alert>
+            </Snackbar>
             <Box
                 component="main"
                 sx={{
@@ -179,5 +255,7 @@ export default function DashboardLayout({
             </Box>
 
         </Box>
+
+        
     );
 }

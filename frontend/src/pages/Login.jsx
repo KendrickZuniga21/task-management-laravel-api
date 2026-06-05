@@ -59,9 +59,25 @@ export default function Login() {
                         data
                     );
 
+                localStorage.setItem(
+                    'token',
+                    response.data.token
+                );
+
+                const meResponse =
+                    await laravelApi.get(
+                        '/me',
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${response.data.token}`
+                            }
+                        }
+                    );
+
                 login(
                     response.data.token,
-                    response.data.user
+                    meResponse.data
                 );
 
                 navigate(

@@ -4,6 +4,7 @@ import {
     useState,
     useEffect
 } from 'react';
+import socket from '../socket';
 
 const AuthContext =
     createContext();
@@ -51,6 +52,13 @@ export function AuthProvider({
 
         setToken(token);
         setUser(user);
+
+        socket.connect();
+
+        socket.emit(
+            'join-room',
+            `user_${user.id || user.sub}`
+        );
     };
 
     const logout = () => {
@@ -65,6 +73,7 @@ export function AuthProvider({
 
         setToken(null);
         setUser(null);
+        socket.disconnect();
     };
 
     return (
