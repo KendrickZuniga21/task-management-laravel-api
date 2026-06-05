@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const nodeApi = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: "https://task-management-node-services-bcuw.onrender.com",
+    // baseURL: "http://localhost:3000",
 });
 
 nodeApi.interceptors.request.use((config) => {

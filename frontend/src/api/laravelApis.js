@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const laravelApi = axios.create({
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: "https://task-management-laravel-api-production.up.railway.app/api",
+    // baseURL: "http://127.0.0.1:8000/api",
 });
 
 laravelApi.interceptors.request.use((config) => {
